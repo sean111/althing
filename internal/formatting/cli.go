@@ -19,7 +19,7 @@ func Line() {
 	if err != nil {
 		width = 100
 	}
-	var character string = "\u2500"
+	var character = "\u2500"
 	line := LineStyle.Render(strings.Repeat(character, width))
 	fmt.Println(line)
 }
