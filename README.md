@@ -73,3 +73,7 @@ members:
     provider: openrouter-example
     model: "allenai/olmo-3.1-32b-think:free" 
 ```
+
+## Warning
+
+This project's code is all over the place, and I have no idea what I want to do in the long run. 
