@@ -165,11 +165,7 @@ func vote(prompt string) {
 		}
 		fmt.Printf("[%s] %s\n", formatting.MemberNameStyle.Render(vote.Name), formatting.ResponseStyle.Render(vote.Response))
 
-		if _, ok := tally[vote.Response]; ok {
-			tally[vote.Response]++
-		} else {
-			tally[vote.Response] = 1
-		}
+		tally[vote.Response]++
 	}
 
 	winner := 0
