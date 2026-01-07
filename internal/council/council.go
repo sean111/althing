@@ -7,6 +7,7 @@ import (
 	"sean111/althing/internal/providers"
 	"sync"
 
+	"github.com/charmbracelet/glamour"
 	"github.com/spf13/viper"
 )
 
@@ -156,7 +157,7 @@ func vote(prompt string) {
 
 	fmt.Println(formatting.HeaderStyle.Render("Voting..."))
 
-	tally := make(map[string]int)
+	memberVotes := ""
 
 	for vote := range votes {
 		if vote.Error != nil {
@@ -164,20 +165,50 @@ func vote(prompt string) {
 			continue
 		}
 		fmt.Printf("[%s] %s\n", formatting.MemberNameStyle.Render(vote.Name), formatting.ResponseStyle.Render(vote.Response))
-
-		tally[vote.Response]++
+		memberVotes += fmt.Sprintf("%s: %s\n", vote.Name, vote.Response)
 	}
 
-	winner := 0
-	var winnerName string
-	for member, count := range tally {
-		fmt.Printf("%s: %d\n", member, count)
-		if count > winner {
-			winner = count
-			winnerName = member
+	votePrompt := fmt.Sprintf("\nMember answers:\n%s\nMember votes:%s", prompt, memberVotes)
+
+	speakerResponse, err := speaker(votePrompt)
+
+	if err != nil {
+		fmt.Printf("Error getting speaker: %v\n", err)
+	} else {
+		var output string
+		formatting.Line()
+		renderedResponse, err := glamour.Render(speakerResponse, "dark")
+		if err != nil {
+			output = speakerResponse
+		} else {
+			output = renderedResponse
 		}
-		fmt.Printf("Member: %s Count: %d\n\n", member, count)
+		fmt.Printf("%s\n\n%s\n", formatting.MemberNameStyle.Render("Speaker:"), output)
+	}
+}
+
+func getMember(name string) (Member, error) {
+	council := getCouncil()
+	for _, member := range council.Members {
+		if member.Name == name {
+			return member, nil
+		}
+	}
+	return Member{}, fmt.Errorf("member not found")
+}
+
+func speaker(votes string) (string, error) {
+	speaker, err := getMember(viper.GetString("speaker"))
+	if err != nil {
+		return "", err
+	}
+	promptOptions := providers.NewPromptOptions(votes)
+	promptOptions.WithSystemMessage(providers.SPEAKER_SYSTEM_PROMPT)
+	response, err := speaker.Provider.Prompt(context.Background(), promptOptions)
+
+	if err != nil {
+		return "", err
 	}
 
-	fmt.Printf("\nWinner: %s\n", winnerName)
+	return response, nil
 }

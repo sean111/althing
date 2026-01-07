@@ -71,7 +71,8 @@ members:
     model: "qwen/qwen3-vl-4b"
   - name: openrouter-member
     provider: openrouter-example
-    model: "allenai/olmo-3.1-32b-think:free" 
+    model: "allenai/olmo-3.1-32b-think:free"
+speaker: gemini-member
 ```
 
 ## Warning
