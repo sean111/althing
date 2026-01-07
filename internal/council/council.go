@@ -198,7 +198,10 @@ func getMember(name string) (Member, error) {
 }
 
 func speaker(votes string) (string, error) {
-	speaker, _ := getMember(viper.GetString("speaker"))
+	speaker, err := getMember(viper.GetString("speaker"))
+	if err != nil {
+		return "", err
+	}
 	promptOptions := providers.NewPromptOptions(votes)
 	promptOptions.WithSystemMessage(providers.SPEAKER_SYSTEM_PROMPT)
 	response, err := speaker.Provider.Prompt(context.Background(), promptOptions)
