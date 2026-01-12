@@ -13,6 +13,7 @@ var LineStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#00FFFF"))
 var MemberNameStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#00FF00"))
 var ResponseStyle = lipgloss.NewStyle().Faint(true)
 var ErrorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000")).Italic(true)
+var ToolCallType = lipgloss.NewStyle().Foreground(lipgloss.Color("#FFB343")).Italic(true)
 
 func Line() {
 	width, _, err := term.GetSize(0)

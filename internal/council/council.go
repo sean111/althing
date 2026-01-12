@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sean111/althing/internal/formatting"
 	"sean111/althing/internal/providers"
+	"sean111/althing/internal/tools"
 	"sync"
 
 	"github.com/charmbracelet/glamour"
@@ -15,6 +16,7 @@ var conncil *Council
 
 type Council struct {
 	Members []Member
+	Tools   []tools.Tool
 }
 
 type MemberResponse struct {
@@ -36,6 +38,11 @@ type MemberProvider interface {
 
 func Init() {
 	conncil = &Council{}
+
+	// Setup tools
+	//tools.ToolList = map[string]tools.Tool{
+	//	"web_search": tools.NewSearch(),
+	//}
 
 	// Set up members
 	if err := viper.UnmarshalKey("members", &conncil.Members); err != nil {
