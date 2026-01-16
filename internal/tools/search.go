@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"sean111/althing/internal/formatting"
 
-	"github.com/ajanicij/goduckgo/goduckgo"
+	"github.com/spf13/viper"
+	"google.golang.org/api/customsearch/v1"
+	"google.golang.org/api/option"
 )
 
 type Search struct {
@@ -21,7 +23,7 @@ func (s *Search) Name() string {
 }
 
 func (s *Search) Description() string {
-	return "Search the web using DuckDuckGo"
+	return "Search the web using Google"
 }
 
 func (s *Search) Parameters() map[string]interface{} {
@@ -44,28 +46,29 @@ func (s *Search) Execute(ctx context.Context, jsonArgs string) (string, error) {
 	if err := json.Unmarshal([]byte(jsonArgs), &args); err != nil {
 		return "", fmt.Errorf("invalid arguments: %w", err)
 	}
-	result, err := goduckgo.Query(args.Query)
+
+	apiKey := viper.GetString("tools.google-search.api_key")
+	searchEngineId := viper.GetString("tools.google-search.search_engine_id")
+
+	service, err := customsearch.NewService(ctx, option.WithAPIKey(apiKey))
+
+	if err != nil {
+		return "", fmt.Errorf("failed to create custom search service: %w", err)
+	}
+	resp, err := service.Cse.List().Cx(searchEngineId).Q(args.Query).Do()
+
 	if err != nil {
 		return "", fmt.Errorf("failed to search: %w", err)
 	}
 
-	var response string
+	response := ""
 
-	if result.AbstractText != "" {
-		response += fmt.Sprintf("Instant Answer:\nAbstract: %s\nSource: %s\nURL: %s\n", result.AbstractText, result.AbstractSource, result.AbstractURL)
-
+	for _, item := range resp.Items {
+		response += fmt.Sprintf("Title: %s\nLink: %s\nSnipplet:%s\n ", item.Title, item.Link, item.Snippet)
 	}
 
-	response += fmt.Sprintf("Related Topics:\n")
-
-	for i, topic := range result.RelatedTopics {
-		if i > 5 {
-			break
-		}
-		response += fmt.Sprintf("Title: %s\nLink: %s\n", topic.Text, topic.FirstURL)
-	}
-
-	fmt.Printf("%s: Query:\n%s\n Response:\n%s\n", formatting.ToolCallType.Render("Search"), formatting.ResponseStyle.Render(args.Query), formatting.ResponseStyle.Render(response))
+	fmt.Printf("%s:\nQuery:\n%s\nResponse:\n%s\n", formatting.ToolCallType.Render("web_search"), formatting.ResponseStyle.Render(args.Query), formatting.ResponseStyle.Render(response))
 
 	return response, nil
+
 }

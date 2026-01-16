@@ -2,6 +2,7 @@ package providers
 
 import (
 	"context"
+	"fmt"
 	"sean111/althing/internal/tools"
 
 	"github.com/openai/openai-go/v3"
@@ -66,6 +67,7 @@ func (p *OpenAIProvider) Prompt(ctx context.Context, promptOptions PromptOptions
 	for _, toolCall := range toolCalls {
 		toolResponse, err := tools.ToolList[toolCall.Function.Name].Execute(context.Background(), toolCall.Function.Arguments)
 		if err != nil {
+			fmt.Printf("Error executing tool: %v\n", err)
 			continue
 		}
 		params.Messages = append(params.Messages, openai.ToolMessage(toolResponse, toolCall.ID))

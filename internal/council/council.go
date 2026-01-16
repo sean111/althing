@@ -40,9 +40,9 @@ func Init() {
 	conncil = &Council{}
 
 	// Setup tools
-	//tools.ToolList = map[string]tools.Tool{
-	//	"web_search": tools.NewSearch(),
-	//}
+	tools.ToolList = map[string]tools.Tool{
+		"web_search": tools.NewSearch(),
+	}
 
 	// Set up members
 	if err := viper.UnmarshalKey("members", &conncil.Members); err != nil {
