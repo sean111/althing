@@ -49,32 +49,28 @@ func (p *OpenRouterProvider) Prompt(ctx context.Context, promptOptions PromptOpt
 
 	req.Tools = functionDefs
 
-	response, err := p.client.CreateChatCompletion(ctx, req)
-	if err != nil {
-		return "", err
-	}
-
-	message := response.Choices[0].Message
-
-	if len(message.ToolCalls) == 0 {
-		return message.Content.Text, nil
-	}
-
-	req.Messages = append(req.Messages, message)
-
-	for _, toolCall := range message.ToolCalls {
-		toolResponse, err := tools.ToolList[toolCall.Function.Name].Execute(ctx, toolCall.Function.Arguments)
+	for i := 0; i < MAX_TOOL_CALLS; i++ {
+		response, err := p.client.CreateChatCompletion(ctx, req)
 		if err != nil {
-			fmt.Printf("Error executing tool: %v\n", err)
-			continue
+			return "", err
 		}
-		req.Messages = append(req.Messages, openrouter.ToolMessage(toolResponse, toolCall.ID))
-	}
 
-	response, err = p.client.CreateChatCompletion(ctx, req)
-	if err != nil {
-		return "", err
-	}
+		message := response.Choices[0].Message
 
-	return response.Choices[0].Message.Content.Text, nil
+		if len(message.ToolCalls) == 0 {
+			return message.Content.Text, nil
+		}
+
+		req.Messages = append(req.Messages, message)
+
+		for _, toolCall := range message.ToolCalls {
+			toolResponse, err := tools.ToolList[toolCall.Function.Name].Execute(ctx, toolCall.Function.Arguments)
+			if err != nil {
+				fmt.Printf("Error executing tool: %v\n", err)
+				toolResponse = fmt.Sprintf("Error: %v", err)
+			}
+			req.Messages = append(req.Messages, openrouter.ToolMessage(toolResponse, toolCall.ID))
+		}
+	}
+	return "", fmt.Errorf("reached maximum number of tool calls")
 }
