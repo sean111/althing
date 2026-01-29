@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sean111/althing/internal/formatting"
 
 	"github.com/spf13/viper"
 	"google.golang.org/api/customsearch/v1"
@@ -47,8 +46,8 @@ func (s *Search) Execute(ctx context.Context, jsonArgs string) (string, error) {
 		return "", fmt.Errorf("invalid arguments: %w", err)
 	}
 
-	apiKey := viper.GetString("tools.google-search.api_key")
-	searchEngineId := viper.GetString("tools.google-search.search_engine_id")
+	apiKey := viper.GetString("tools.settings.google-search.api_key")
+	searchEngineId := viper.GetString("tools.settings.google-search.search_engine_id")
 
 	service, err := customsearch.NewService(ctx, option.WithAPIKey(apiKey))
 
@@ -67,7 +66,7 @@ func (s *Search) Execute(ctx context.Context, jsonArgs string) (string, error) {
 		response += fmt.Sprintf("Title: %s\nLink: %s\nSnipplet:%s\n ", item.Title, item.Link, item.Snippet)
 	}
 
-	fmt.Printf("%s:\nQuery:\n%s\nResponse:\n%s\n", formatting.ToolCallType.Render("web_search"), formatting.ResponseStyle.Render(args.Query), formatting.ResponseStyle.Render(response))
+	//fmt.Printf("%s:\nQuery:\n%s\nResponse:\n%s\n", formatting.ToolCallType.Render("web_search"), formatting.ResponseStyle.Render(args.Query), formatting.ResponseStyle.Render(response))
 
 	return response, nil
 

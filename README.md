@@ -77,4 +77,8 @@ speaker: gemini-member
 
 ## Warning
 
-This project's code is all over the place, and I have no idea what I want to do in the long run. 
+This project's code is all over the place, and I have no idea what I want to do in the long run.
+
+## AI Usage
+
+I do use AI to ask questions and check for possible bugs/optimizations. However, this is not vibe coded and never will be.

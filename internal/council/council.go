@@ -40,9 +40,26 @@ func Init() {
 	conncil = &Council{}
 
 	// Setup tools
-	tools.ToolList = map[string]tools.Tool{
-		"web_search": tools.NewSearch(),
+
+	// tools.ToolList = map[string]tools.Tool{
+	// 	"web_search": tools.NewSearch(),
+	// }
+	//
+
+	list := map[string]tools.Tool{}
+
+	enabledTools := viper.GetStringSlice("tools.enabled")
+
+	for _, enabledTool := range enabledTools {
+		switch enabledTool {
+		case "web_search":
+			list["web_search"] = tools.NewSearch()
+		}
 	}
+
+	tools.ToolList = list
+
+	// Loop over tools.enabled and enable the selected tools if they exist
 
 	// Set up members
 	if err := viper.UnmarshalKey("members", &conncil.Members); err != nil {

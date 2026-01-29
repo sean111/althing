@@ -2,6 +2,8 @@ package providers
 
 import (
 	"context"
+	"fmt"
+	"sean111/althing/internal/tools"
 
 	"github.com/revrost/go-openrouter"
 )
@@ -24,19 +26,55 @@ func CreateOpenRouterProvider(options OpenRouterProviderOptions) (*OpenRouterPro
 }
 
 func (p *OpenRouterProvider) Prompt(ctx context.Context, promptOptions PromptOptions) (string, error) {
-	response, err := p.client.CreateChatCompletion(
-		context.Background(),
-		openrouter.ChatCompletionRequest{
-			Model: p.model,
-			Messages: []openrouter.ChatCompletionMessage{
-				openrouter.UserMessage(promptOptions.UserMessage),
-				openrouter.SystemMessage(promptOptions.SystemMessage),
-			},
+	req := openrouter.ChatCompletionRequest{
+		Model: p.model,
+		Messages: []openrouter.ChatCompletionMessage{
+			openrouter.UserMessage(promptOptions.UserMessage),
+			openrouter.SystemMessage(promptOptions.SystemMessage),
 		},
-	)
+	}
 
+	var functionDefs []openrouter.Tool
+	for name, tool := range tools.ToolList {
+		fd := openrouter.Tool{
+			Type: openrouter.ToolTypeFunction,
+			Function: &openrouter.FunctionDefinition{
+				Name:        name,
+				Description: tool.Description(),
+				Parameters:  tool.Parameters(),
+			},
+		}
+		functionDefs = append(functionDefs, fd)
+	}
+
+	req.Tools = functionDefs
+
+	response, err := p.client.CreateChatCompletion(ctx, req)
 	if err != nil {
 		return "", err
 	}
+
+	message := response.Choices[0].Message
+
+	if len(message.ToolCalls) == 0 {
+		return message.Content.Text, nil
+	}
+
+	req.Messages = append(req.Messages, message)
+
+	for _, toolCall := range message.ToolCalls {
+		toolResponse, err := tools.ToolList[toolCall.Function.Name].Execute(ctx, toolCall.Function.Arguments)
+		if err != nil {
+			fmt.Printf("Error executing tool: %v\n", err)
+			continue
+		}
+		req.Messages = append(req.Messages, openrouter.ToolMessage(toolResponse, toolCall.ID))
+	}
+
+	response, err = p.client.CreateChatCompletion(ctx, req)
+	if err != nil {
+		return "", err
+	}
+
 	return response.Choices[0].Message.Content.Text, nil
 }
